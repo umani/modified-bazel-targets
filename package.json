@@ -25,21 +25,97 @@
   "author": "YourNameOrOrganization",
   "license": "MIT",
   "dependencies": {
-    "@actions/core": "^1.2.0"
+    "@actions/core": "1.2.2",
+    "tmp": "^0.1.0",
+    "tmp-promise": "^2.0.2"
   },
   "devDependencies": {
-    "@types/jest": "^24.0.23",
-    "@types/node": "^12.7.12",
-    "@typescript-eslint/parser": "^2.8.0",
-    "@zeit/ncc": "^0.20.5",
-    "eslint": "^5.16.0",
-    "eslint-plugin-github": "^2.0.0",
-    "eslint-plugin-jest": "^22.21.0",
-    "jest": "^24.9.0",
-    "jest-circus": "^24.9.0",
-    "js-yaml": "^3.13.1",
-    "prettier": "^1.19.1",
-    "ts-jest": "^24.2.0",
-    "typescript": "^3.6.4"
+    "@types/jest": "25.1.2",
+    "@types/node": "13.7.1",
+    "@typescript-eslint/parser": "2.19.2",
+    "eslint": "6.8.0",
+    "eslint-plugin-jest": "23.7.0",
+    "jest": "25.1.0",
+    "jest-circus": "25.1.0",
+    "js-yaml": "3.13.1",
+    "prettier": "1.19.1",
+    "ts-jest": "25.2.0",
+    "typescript": "3.7.5"
+  },
+  "eslintConfig": {
+    "parser": "@typescript-eslint/parser",
+    "extends": [
+      "plugin:@typescript-eslint/recommended",
+      "prettier/@typescript-eslint",
+      "plugin:prettier/recommended"
+    ],
+    "rules": {
+      "@typescript-eslint/camelcase": "off",
+      "camelcase": "off",
+      "@typescript-eslint/explicit-function-return-type": [
+        "error",
+        {
+          "allowExpressions": true
+        }
+      ],
+      "@typescript-eslint/no-empty-interface": [
+        "error",
+        {
+          "allowSingleExtends": true
+        }
+      ],
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          "argsIgnorePattern": "_"
+        }
+      ],
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-use-before-define": [
+        "error",
+        {
+          "functions": true,
+          "classes": false
+        }
+      ],
+      "@typescript-eslint/no-var-requires": "off",
+      "sort-imports": [
+        "error",
+        {
+          "ignoreCase": false,
+          "ignoreDeclarationSort": false,
+          "ignoreMemberSort": false,
+          "memberSyntaxSortOrder": [
+            "none",
+            "all",
+            "multiple",
+            "single"
+          ]
+        }
+      ]
+    },
+    "overrides": [
+      {
+        "files": [
+          "*.ts",
+          "*.tsx"
+        ],
+        "rules": {
+          "@typescript-eslint/camelcase": [
+            "error",
+            {
+              "properties": "always"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "prettier": {
+    "semi": false,
+    "trailingComma": "all",
+    "singleQuote": false,
+    "printWidth": 120,
+    "tabWidth": 4
   }
 }
