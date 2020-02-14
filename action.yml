@@ -1,10 +1,13 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'Modified bazel targets'
+description: 'This action outputs the minimal set of bazel projects to be built given a list of git changed files.'
+author: 'Juliana Oliveira <juliana@uma.ni>'
 inputs:
-  myInput:              # change this
-    description: 'input description here'
-    default: 'default value if applicable'
+  changed-files:
+    description: 'List of changed files separated by space'
+    required: true
+outputs:
+  bazel-targets:
+    description: 'A minimal set of bazel build targets'
 runs:
   using: 'node12'
   main: 'dist/index.js'
