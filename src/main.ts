@@ -1,7 +1,7 @@
 import * as core from "@actions/core"
 import { dirname, join, parse } from "path"
 import { exec } from "child_process"
-import { fs } from "fs"
+import * as fs from "fs"
 import { promisify } from "util"
 
 async function findBuildBazelFile(currentPath: string, basePath: string): Promise<string | null> {
