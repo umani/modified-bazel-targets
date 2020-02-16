@@ -26,7 +26,7 @@ export async function findBazelBuilds(changedFiles: string[], basePath: string =
 }
 
 export const bazelTargets = async (input: Set<string>): Promise<string> => {
-   const { stdout, stderr } = await promisify(exec)(`bazel query 'rdeps(${Array.from(input).join(', ')})'`)
+   const { stdout, stderr } = await promisify(exec)(`$(yarn bin)/bazel query 'rdeps(${Array.from(input).join(', ')})'`)
    return stdout
 }
 
