@@ -34,7 +34,7 @@ export async function findAllBazelPackages(changedFiles: string[]): Promise<stri
 }
 
 async function bazelTargets(bazel: string, input: string[]): Promise<string[]> {
-    const targets = await Promise.all(input.map(p => `${bazel} query 'rdeps(//..., ${p})'`).map(promisify(exec)))
+    const targets = await Promise.all(input.map(p => promisify(exec)(`${bazel} query 'rdeps(//..., ${p})'`)))
     return Array.from(
         targets.reduce<Set<string>>((s, { stdout }) => {
             stdout
