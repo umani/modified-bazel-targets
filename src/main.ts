@@ -37,16 +37,17 @@ export async function findAllBazelPackages(changedFiles: string[], workspace: st
     return new Set(packages.filter((f): f is string => f !== null))
 }
 
-async function bazelTargets(input: Set<string>): Promise<string> {
-    const { stdout } = await promisify(exec)(`bazel query 'rdeps(${Array.from(input).join(", ")})'`)
+async function bazelTargets(bazel: string, input: Set<string>): Promise<string> {
+    const { stdout } = await promisify(exec)(`${bazel} query 'rdeps(${Array.from(input).join(", ")})'`)
     return stdout
 }
 
 export async function run(): Promise<void> {
     const changedFiles: string = core.getInput("changed-files")
     const workspace: string = core.getInput("workspace-folder")
+    const bazel: string = core.getInput("bazel-exec", { required: false }) || "bazel"
     const bazelBuilds = await findAllBazelPackages(changedFiles.split(" "), normalize(workspace))
-    const processedTargets = await bazelTargets(bazelBuilds)
+    const processedTargets = await bazelTargets(bazel, bazelBuilds)
     core.debug(`bazel targets: ${processedTargets}`)
     core.setOutput("bazel-targets", processedTargets)
 }
