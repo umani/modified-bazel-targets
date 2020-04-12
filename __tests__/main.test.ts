@@ -1,95 +1,86 @@
-import * as process from "process"
-import * as fs from "fs"
-import * as tmp from "tmp-promise"
-import { findBazelBuilds, run } from "../src/main"
-import { join, dirname } from "path"
+import fs from "fs"
+import { join } from "path"
 
-describe('In a One-file project', () => {
-    let dir: tmp.DirectoryResult
+import del from "del"
 
-    beforeAll(async () => dir = await tmp.dir())
-    afterAll(async() => dir.cleanup())
+import { findAllBazelPackages, findBazelPackage } from "../src/main"
 
-    describe("if BUILD.bazel file", () => {
-        describe("does exist", () => {
-          let f: tmp.FileResult
+let tmp: string
 
-          beforeAll(async () => f = await tmp.file({ name: 'BUILD.bazel', dir: dir.path }))
-          afterAll(async() => f.cleanup())
+async function createPackage(parent: string, name: string): Promise<string> {
+    const dir = join(parent, name)
+    await fs.promises.mkdir(dir)
+    await fs.promises.writeFile(join(dir, "BUILD.bazel"), "")
+    return dir
+}
 
-          test('its there', () => { expect(fs.promises.access(f.path, fs.constants.F_OK)).resolves })
-          test('its path is ok', () => { expect(join(dir.path, "BUILD.bazel")).toBe(f.path) })
-          test('its parent directory is found as target', async () => { expect(await findBazelBuilds([f.path], dir.path)).toContain(dirname(f.path)) })
-        })
-
-        describe("does not exist", () => {
-          let f: string
-
-          beforeAll(() => f = join(dir.path, "BUILD.bazel"))
-          test('its not there', async () => { await expect(fs.promises.access(f, fs.constants.F_OK)).rejects.toThrowError() })
-          test('its parent directory is not a target', async () => { expect(await findBazelBuilds([f], dir.path)).toEqual(new Set<string>()) })
-
-        })
-    })
+// Create a Bazel directory structure with the following format:
+// root
+// └── workspace
+//      ├── package
+//         ├── sub-package
+//         ├── plainfolder
+beforeAll(async () => {
+    tmp = await fs.promises.mkdtemp("bazel-modified-files")
+    const root = join(tmp, "root")
+    await fs.promises.mkdir(root)
+    const workspace = await createPackage(root, "workspace")
+    const pkg = await createPackage(workspace, "package")
+    await createPackage(pkg, "subpackage")
+    await fs.promises.mkdir(join(pkg, "plain-folder"))
 })
 
-describe('In a Multi-file project', () => {
-    let dirs: Set<tmp.DirectoryResult>
-    let basename: string
+afterAll(async () => await del([tmp]))
 
-    beforeAll(async () => {
-      dirs = new Set<tmp.DirectoryResult>()
-      for(let i = 0; i < 5; i++) {
-        let dir = await tmp.dir()
-        dirs.add(dir)
-        basename = dir.path
-      }
+describe("A multi-package project", () => {
+    describe("modified file directly under the workspace", () => {
+        it("should return the root as the target", async () => {
+            expect(await findBazelPackage(join(tmp, "root/workspace/blah"), "workspace")).toEqual("...")
+        })
+
+        describe("modified file under a package", () => {
+            it("should return the package as the target", async () => {
+                expect(await findBazelPackage(join(tmp, "root/workspace/package/blah"), "workspace")).toEqual("package")
+            })
+        })
+
+        describe("modified file under a subpackage", () => {
+            it("should return the subpackage as the target", async () => {
+                expect(
+                    await findBazelPackage(join(tmp, "root/workspace/package/subpackage/blah"), "workspace"),
+                ).toEqual("package/subpackage")
+            })
+        })
+
+        describe("modified file under a package folder", () => {
+            it("should return the package as the target", async () => {
+                expect(
+                    await findBazelPackage(join(tmp, "root/workspace/package/plain-folder/blah"), "workspace"),
+                ).toEqual("package")
+            })
+        })
+
+        describe("non-existing package", () => {
+            it("returns an empty result set", async () => {
+                expect(await findBazelPackage(join(tmp, "root/blah"), "workspace")).toEqual(null)
+            })
+        })
     })
 
-    afterAll(async () => { for(const dir of dirs) { await dir.cleanup() } })
-
-    describe("if BUILD.bazel file", () => {
-        describe("does not exist", () => {
-          let files: string[]
-          beforeAll(() => files = Array.from(dirs, (dir) => { return join(dir.path, 'BUILD.bazel') }))
-
-          test('its parent directory is not found as target', async () => {
-            expect(await findBazelBuilds(files, basename)).toEqual(new Set<string>())
-          })
-        })
-
-        describe("does exist in all dirs", () => {
-          let files: Map<string, tmp.FileResult>
-
-          beforeAll(async () => {
-            files = new Map<string, tmp.FileResult>()
-            for (const dir of dirs) { files.set(dir.path, await tmp.file({ name: 'BUILD.bazel', dir: dir.path })) }
-          })
-
-          afterAll(async () => { for (const [_, file] of files) { await file.cleanup() }})
-
-          test('all parent directory are found as target', async () => {
-            expect(await findBazelBuilds([...files.keys()], basename)).toEqual(new Set<string>([...files.keys()]))
-          })
-        })
-
-        describe("does exist in some dirs", () => {
-          let files: Map<string, tmp.FileResult>
-
-          beforeAll(async () => {
-            files = new Map<string, tmp.FileResult>()
-            const it = dirs.values()
-            const dir1 = it.next().value
-            const dir2 = it.next().value
-            files.set(dir1.path, await tmp.file({ name: 'BUILD.bazel', dir: dir1.path }))
-            files.set(dir2.path, await tmp.file({ name: 'BUILD.bazel', dir: dir2.path }))
-          })
-
-          afterAll(async () => { for (const [_, file] of files) { await file.cleanup() }})
-
-          test('some parent directories are found as target', async () => {
-            expect(await findBazelBuilds([...files.keys()], basename)).toEqual(new Set<string>([...files.keys()]))
-          })
+    describe("multiple modified files", () => {
+        it("should return valid targets for all", async () => {
+            expect(
+                await findAllBazelPackages(
+                    [
+                        join(tmp, "root/workspace/blah"),
+                        join(tmp, "root/workspace/package/plain-folder/blah"),
+                        join(tmp, "root/blah"),
+                    ],
+                    "workspace",
+                ),
+            ).toEqual(
+                new Set<string>(["...", "package"]),
+            )
         })
     })
 })
