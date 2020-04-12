@@ -80,9 +80,7 @@ describe("A multi-package project", () => {
                     ],
                     "workspace",
                 ),
-            ).toEqual(
-                new Set<string>(["//...", "//package:all"]),
-            )
+            ).toEqual(["//...", "//package:all"])
         })
     })
 })
