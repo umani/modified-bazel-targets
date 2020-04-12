@@ -1,50 +1,44 @@
 {
   "name": "typescript-action",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "private": true,
-  "description": "TypeScript template action",
   "main": "lib/main.js",
   "scripts": {
     "build": "tsc",
-    "format": "prettier --write **/*.ts",
-    "format-check": "prettier --check **/*.ts",
-    "lint": "eslint src/**/*.ts",
+    "lint": "eslint **/*.ts",
     "pack": "ncc build",
-    "test": "jest",
-    "all": "npm run build && npm run format && npm run lint && npm run pack && npm test"
+    "test": "jest"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/actions/typescript-action.git"
-  },
-  "keywords": [
-    "actions",
-    "node",
-    "setup"
-  ],
-  "author": "YourNameOrOrganization",
   "license": "MIT",
   "dependencies": {
-    "@actions/core": "1.2.2",
-    "tmp": "^0.1.0",
-    "tmp-promise": "^2.0.2"
+    "@actions/core": "1.2.3"
   },
   "devDependencies": {
-    "@types/jest": "25.1.2",
-    "@types/node": "13.7.1",
-    "@typescript-eslint/parser": "2.19.2",
+    "@types/jest": "25.2.1",
+    "@types/node": "13.11.1",
+    "@typescript-eslint/eslint-plugin": "2.27.0",
+    "@typescript-eslint/parser": "2.27.0",
+    "@zeit/ncc": "0.22.1",
+    "del": "^5.1.0",
     "eslint": "6.8.0",
-    "eslint-plugin-jest": "23.7.0",
-    "jest": "25.1.0",
-    "jest-circus": "25.1.0",
-    "js-yaml": "3.13.1",
-    "prettier": "1.19.1",
-    "ts-jest": "25.2.0",
-    "typescript": "3.7.5"
+    "eslint-config-prettier": "6.10.1",
+    "eslint-plugin-import": "2.20.2",
+    "eslint-plugin-jest": "23.8.2",
+    "eslint-plugin-prettier": "3.1.2",
+    "jest": "25.3.0",
+    "prettier": "2.0.4",
+    "ts-jest": "25.3.1",
+    "typescript": "3.8.3"
   },
   "eslintConfig": {
     "parser": "@typescript-eslint/parser",
+    "plugins": [
+      "import"
+    ],
     "extends": [
+      "plugin:import/errors",
+      "plugin:import/warnings",
+      "plugin:import/typescript",
       "plugin:@typescript-eslint/recommended",
       "prettier/@typescript-eslint",
       "plugin:prettier/recommended"
@@ -52,6 +46,7 @@
     "rules": {
       "@typescript-eslint/camelcase": "off",
       "camelcase": "off",
+      "curly": 2,
       "@typescript-eslint/explicit-function-return-type": [
         "error",
         {
@@ -74,25 +69,44 @@
       "@typescript-eslint/no-use-before-define": [
         "error",
         {
-          "functions": true,
-          "classes": false
+          "classes": false,
+          "functions": false
         }
       ],
       "@typescript-eslint/no-var-requires": "off",
+      "object-shorthand": [
+        "error",
+        "always"
+      ],
+      "import/no-unresolved": "off",
+      "import/order": [
+        "error",
+        {
+          "alphabetize": {
+            "order": "asc",
+            "caseInsensitive": true
+          },
+          "groups": [
+            "builtin",
+            "external",
+            "internal",
+            "parent",
+            "sibling",
+            "index"
+          ],
+          "newlines-between": "always"
+        }
+      ],
+      "react/prop-types": "off",
       "sort-imports": [
         "error",
         {
-          "ignoreCase": false,
-          "ignoreDeclarationSort": false,
-          "ignoreMemberSort": false,
-          "memberSyntaxSortOrder": [
-            "none",
-            "all",
-            "multiple",
-            "single"
-          ]
+          "ignoreCase": true,
+          "ignoreDeclarationSort": true,
+          "ignoreMemberSort": false
         }
-      ]
+      ],
+      "import/default": "off"
     },
     "overrides": [
       {
@@ -112,6 +126,7 @@
     ]
   },
   "prettier": {
+    "arrowParens": "avoid",
     "semi": false,
     "trailingComma": "all",
     "singleQuote": false,
