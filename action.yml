@@ -10,4 +10,4 @@ outputs:
     description: 'A minimal set of bazel build targets'
 runs:
   using: 'node12'
-  main: 'lib/main.js'
+  main: 'dist/index.js'
