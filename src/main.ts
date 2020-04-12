@@ -18,10 +18,10 @@ const normalize = (path: string): string => path.replace(/^\/+|\/+$/g, "")
 
 export async function findBazelPackage(path: string, workspace: string): Promise<string | null> {
     if (path.match(`\/?${workspace}\/?$`)) {
-        return "..."
+        return "//..."
     }
     if (await fileExists(join(path, "BUILD.bazel"))) {
-        return normalize(path.substring(path.indexOf(workspace) + workspace.length, path.length))
+        return `//${normalize(path.substring(path.indexOf(workspace) + workspace.length, path.length))}:all`
     }
     const parent = dirname(path)
     if (parent === path) {

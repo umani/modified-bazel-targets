@@ -35,12 +35,14 @@ afterAll(async () => await del([tmp]))
 describe("A multi-package project", () => {
     describe("modified file directly under the workspace", () => {
         it("should return the root as the target", async () => {
-            expect(await findBazelPackage(join(tmp, "root/workspace/blah"), "workspace")).toEqual("...")
+            expect(await findBazelPackage(join(tmp, "root/workspace/blah"), "workspace")).toEqual("//...")
         })
 
         describe("modified file under a package", () => {
             it("should return the package as the target", async () => {
-                expect(await findBazelPackage(join(tmp, "root/workspace/package/blah"), "workspace")).toEqual("package")
+                expect(await findBazelPackage(join(tmp, "root/workspace/package/blah"), "workspace")).toEqual(
+                    "//package:all",
+                )
             })
         })
 
@@ -48,7 +50,7 @@ describe("A multi-package project", () => {
             it("should return the subpackage as the target", async () => {
                 expect(
                     await findBazelPackage(join(tmp, "root/workspace/package/subpackage/blah"), "workspace"),
-                ).toEqual("package/subpackage")
+                ).toEqual("//package/subpackage:all")
             })
         })
 
@@ -56,7 +58,7 @@ describe("A multi-package project", () => {
             it("should return the package as the target", async () => {
                 expect(
                     await findBazelPackage(join(tmp, "root/workspace/package/plain-folder/blah"), "workspace"),
-                ).toEqual("package")
+                ).toEqual("//package:all")
             })
         })
 
@@ -79,7 +81,7 @@ describe("A multi-package project", () => {
                     "workspace",
                 ),
             ).toEqual(
-                new Set<string>(["...", "package"]),
+                new Set<string>(["//...", "//package:all"]),
             )
         })
     })
