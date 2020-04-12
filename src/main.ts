@@ -14,27 +14,23 @@ async function fileExists(path: string): Promise<boolean> {
     }
 }
 
-const normalize = (path: string): string => path.replace(/^\/+|\/+$/g, "")
-
-export async function findBazelPackage(path: string, workspace: string): Promise<string | null> {
-    if (path.match(`\/?${workspace}\/?$`)) {
+export async function findBazelPackage(path: string): Promise<string> {
+    if (await fileExists(join(path, "WORKSPACE"))) {
         return "//..."
     }
     if (await fileExists(join(path, "BUILD.bazel"))) {
-        return `//${normalize(path.substring(path.indexOf(workspace) + workspace.length, path.length))}:all`
+        return `//${path}:all`
     }
     const parent = dirname(path)
     if (parent === path) {
-        return null
+        throw new Error("This action should be run only for files inside a Bazel workspace")
     }
-    return await findBazelPackage(parent, workspace)
+    return await findBazelPackage(parent)
 }
 
-export async function findAllBazelPackages(changedFiles: string[], workspace: string): Promise<string[]> {
-    const packages = await Promise.all(
-        Array.from(new Set(changedFiles.map(dirname))).map(f => findBazelPackage(f, workspace)),
-    )
-    return Array.from(new Set(packages.filter((f): f is string => f !== null)))
+export async function findAllBazelPackages(changedFiles: string[]): Promise<string[]> {
+    const targets = await Promise.all(Array.from(new Set(changedFiles.map(dirname))).map(f => findBazelPackage(f)))
+    return Array.from(new Set(targets))
 }
 
 async function bazelTargets(bazel: string, input: string[]): Promise<string[]> {
@@ -52,9 +48,8 @@ async function bazelTargets(bazel: string, input: string[]): Promise<string[]> {
 
 export async function run(): Promise<void> {
     const changedFiles: string = core.getInput("changed-files")
-    const workspace: string = core.getInput("workspace-folder")
     const bazel: string = core.getInput("bazel-exec", { required: false }) || "bazel"
-    const bazelBuilds = await findAllBazelPackages(changedFiles.split(" "), normalize(workspace))
+    const bazelBuilds = await findAllBazelPackages(changedFiles.split(" "))
     const processedTargets = (await bazelTargets(bazel, bazelBuilds)).join(" ")
     core.debug(`bazel targets: ${processedTargets}`)
     core.setOutput("bazel-targets", processedTargets)
