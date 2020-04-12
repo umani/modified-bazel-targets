@@ -18,3 +18,15 @@ It needs to be executed after the actions/checkout action, as it needs to operat
 
 ### Outputs
 * **`bazel-targets`**: A JSON encoded array of the affected Bazel targets.
+
+## Release new version
+
+To release a new version of this action, do:
+
+```
+yarn build && yarn run pack
+git add dist
+git commit -a -m "release: {version}"
+git push origin releases/{version}
+```
+
