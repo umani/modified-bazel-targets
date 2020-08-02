@@ -40,7 +40,7 @@ async function bazelTargets(bazel: string, input: string[], query: (t: string) =
             stdout
                 .toString()
                 .split(/(?:\r\n|\r|\n)/g)
-                .forEach(l => s.add(l))
+                .forEach(l => l.trim() && s.add(l))
             return s
         }, new Set()),
     )
