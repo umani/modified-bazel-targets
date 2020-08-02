@@ -149,7 +149,7 @@ function run() {
 }
 exports.run = run;
 if (require.main === require.cache[eval('__filename')]) {
-    run();
+    run().catch(error => core.setFailed(error.message));
 }
 
 
