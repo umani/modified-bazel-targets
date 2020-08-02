@@ -33,8 +33,8 @@ export async function findAllBazelPackages(changedFiles: string[]): Promise<stri
     return Array.from(new Set(targets))
 }
 
-async function bazelTargets(bazel: string, input: string[]): Promise<string[]> {
-    const targets = await Promise.all(input.map(p => promisify(exec)(`${bazel} query 'rdeps(//..., ${p})'`)))
+async function bazelTargets(bazel: string, query: string, input: string[]): Promise<string[]> {
+    const targets = await Promise.all(input.map(p => promisify(exec)(`${bazel} query '${query}(//..., ${p})'`)))
     return Array.from(
         targets.reduce<Set<string>>((s, { stdout }) => {
             stdout
@@ -50,9 +50,13 @@ export async function run(): Promise<void> {
     const changedFiles: string = core.getInput("changed-files")
     const bazel: string = core.getInput("bazel-exec", { required: false }) || "bazel"
     const bazelBuilds = await findAllBazelPackages(changedFiles.split(" "))
-    const processedTargets = (await bazelTargets(bazel, bazelBuilds)).join(" ")
-    core.debug(`bazel targets: ${processedTargets}`)
-    core.setOutput("bazel-targets", processedTargets)
+    const processedTargets = await bazelTargets(bazel, "rdeps", bazelBuilds)
+    const processedTestTargets = await bazelTargets(bazel, "tests", bazelBuilds)
+    const processedNonTestTargets = processedTargets.filter(t => !processedTestTargets.includes(t))
+    core.debug(`bazel targets: ${processedNonTestTargets}`)
+    core.setOutput("bazel-targets", processedNonTestTargets.join(" "))
+    core.debug(`bazel test targets: ${processedTestTargets}`)
+    core.setOutput("bazel-test-targets", processedTestTargets.join(" "))
 }
 
 if (require.main === module) {
