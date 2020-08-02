@@ -1,13 +1,16 @@
-name: 'Modified bazel targets'
-description: 'This action outputs the minimal set of bazel projects to be built given a list of git changed files.'
-author: 'Juliana Oliveira <juliana@uma.ni>'
+name: "Modified bazel targets"
+description: "This action outputs the minimal set of bazel projects to be built given a list of git changed files."
+author: "Juliana Oliveira <juliana@uma.ni>"
 inputs:
-  changed-files:
-    description: 'List of changed files separated by space'
-    required: true
+    changed-files:
+        description: "List of changed files separated by space"
+        required: true
+    bazel-exec:
+        description: "The path to the Bazel executable"
+        required: false
 outputs:
-  bazel-targets:
-    description: 'A minimal set of bazel build targets'
+    bazel-targets:
+        description: "A minimal set of bazel build targets"
 runs:
-  using: 'node12'
-  main: 'dist/index.js'
+    using: "node12"
+    main: "dist/index.js"
