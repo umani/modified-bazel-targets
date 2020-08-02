@@ -121,9 +121,9 @@ function findAllBazelPackages(changedFiles) {
     });
 }
 exports.findAllBazelPackages = findAllBazelPackages;
-function bazelTargets(bazel, query, input) {
+function bazelTargets(bazel, input, query) {
     return __awaiter(this, void 0, void 0, function* () {
-        const targets = yield Promise.all(input.map(p => util_1.promisify(child_process_1.exec)(`${bazel} query '${query}(//..., ${p})'`)));
+        const targets = yield Promise.all(input.map(p => util_1.promisify(child_process_1.exec)(`${bazel} query '${query(p)}'`)));
         return Array.from(targets.reduce((s, { stdout }) => {
             stdout
                 .toString()
@@ -138,8 +138,8 @@ function run() {
         const changedFiles = core.getInput("changed-files");
         const bazel = core.getInput("bazel-exec", { required: false }) || "bazel";
         const bazelBuilds = yield findAllBazelPackages(changedFiles.split(" "));
-        const processedTargets = yield bazelTargets(bazel, "rdeps", bazelBuilds);
-        const processedTestTargets = yield bazelTargets(bazel, "tests", bazelBuilds);
+        const processedTargets = yield bazelTargets(bazel, bazelBuilds, t => `rdeps(//..., ${t})`);
+        const processedTestTargets = yield bazelTargets(bazel, processedTargets, t => `kind(".*_test rule", ${t})`);
         const processedNonTestTargets = processedTargets.filter(t => !processedTestTargets.includes(t));
         core.debug(`bazel targets: ${processedNonTestTargets}`);
         core.setOutput("bazel-targets", processedNonTestTargets.join(" "));
