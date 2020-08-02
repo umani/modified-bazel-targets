@@ -7,7 +7,7 @@ It needs to be executed after the actions/checkout action, as it needs to operat
 ### Workflow Config Example
 ```
 - name: Changed Files Exporter
-  uses: futuratrepadeira/modified-bazel-targets@v1.0.0
+  uses: futuratrepadeira/modified-bazel-targets@v1
   with:
     changed-files: "file1.go path/to/file2.go"
 ```
@@ -18,6 +18,7 @@ It needs to be executed after the actions/checkout action, as it needs to operat
 
 ### Outputs
 * **`bazel-targets`**: A JSON encoded array of the affected Bazel targets.
+* **`bazel-test-targets`**: A JSON encoded array of the affected Bazel test targets.
 
 ## Release new version
 
