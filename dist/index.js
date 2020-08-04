@@ -123,14 +123,10 @@ function findAllBazelPackages(changedFiles) {
 exports.findAllBazelPackages = findAllBazelPackages;
 function bazelTargets(bazel, input, query) {
     return __awaiter(this, void 0, void 0, function* () {
-        const targets = yield Promise.all(input.map(p => util_1.promisify(child_process_1.exec)(`${bazel} query '${query(p)}'`)));
-        return Array.from(targets.reduce((s, { stdout }) => {
-            stdout
-                .toString()
-                .split(/(?:\r\n|\r|\n)/g)
-                .forEach(l => l.trim() && s.add(l));
-            return s;
-        }, new Set()));
+        const targets = yield util_1.promisify(child_process_1.exec)(`${bazel} query '${query(`set(${input.join(" ")})`)}'`);
+        const set = new Set();
+        targets.stdout.split(/(?:\r\n|\r|\n)/g).forEach(l => l.trim() && set.add(l));
+        return Array.from(set);
     });
 }
 function run() {
