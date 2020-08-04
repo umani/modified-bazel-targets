@@ -34,16 +34,10 @@ export async function findAllBazelPackages(changedFiles: string[]): Promise<stri
 }
 
 async function bazelTargets(bazel: string, input: string[], query: (t: string) => string): Promise<string[]> {
-    const targets = await Promise.all(input.map(p => promisify(exec)(`${bazel} query '${query(p)}'`)))
-    return Array.from(
-        targets.reduce<Set<string>>((s, { stdout }) => {
-            stdout
-                .toString()
-                .split(/(?:\r\n|\r|\n)/g)
-                .forEach(l => l.trim() && s.add(l))
-            return s
-        }, new Set()),
-    )
+    const targets = await promisify(exec)(`${bazel} query '${query(`set(${input.join(" ")})`)}'`)
+    const set = new Set<string>()
+    targets.stdout.split(/(?:\r\n|\r|\n)/g).forEach(l => l.trim() && set.add(l))
+    return Array.from(set)
 }
 
 export async function run(): Promise<void> {
