@@ -41,12 +41,15 @@ async function bazelTargets(bazel: string, input: string[], query: (t: string) =
 }
 
 export async function run(): Promise<void> {
+    const start = new Date()
     const changedFiles: string = core.getInput("changed-files")
     const bazel: string = core.getInput("bazel-exec", { required: false }) || "bazel"
     const bazelBuilds = await findAllBazelPackages(changedFiles.split(" "))
+    core.debug(`${new Date().getTime() - start.getTime()} found bazel packages`)
     const processedTargets = await bazelTargets(bazel, bazelBuilds, t => `rdeps(//..., ${t})`)
-    core.debug(`all targets: ${processedTargets}`)
+    core.debug(`${new Date().getTime() - start.getTime()} all targets: ${processedTargets}`)
     const processedTestTargets = await bazelTargets(bazel, processedTargets, t => `kind(".*_test rule", ${t})`)
+    core.debug(`${new Date().getTime() - start.getTime()} found bazel test targets`)
     const processedNonTestTargets = processedTargets.filter(t => !processedTestTargets.includes(t))
     core.debug(`bazel targets: ${processedNonTestTargets}`)
     core.setOutput("bazel-targets", processedNonTestTargets.join(" "))

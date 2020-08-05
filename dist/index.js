@@ -131,12 +131,15 @@ function bazelTargets(bazel, input, query) {
 }
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
+        const start = new Date();
         const changedFiles = core.getInput("changed-files");
         const bazel = core.getInput("bazel-exec", { required: false }) || "bazel";
         const bazelBuilds = yield findAllBazelPackages(changedFiles.split(" "));
+        core.debug(`${new Date().getTime() - start.getTime()} found bazel packages`);
         const processedTargets = yield bazelTargets(bazel, bazelBuilds, t => `rdeps(//..., ${t})`);
-        core.debug(`all targets: ${processedTargets}`);
+        core.debug(`${new Date().getTime() - start.getTime()} all targets: ${processedTargets}`);
         const processedTestTargets = yield bazelTargets(bazel, processedTargets, t => `kind(".*_test rule", ${t})`);
+        core.debug(`${new Date().getTime() - start.getTime()} found bazel test targets`);
         const processedNonTestTargets = processedTargets.filter(t => !processedTestTargets.includes(t));
         core.debug(`bazel targets: ${processedNonTestTargets}`);
         core.setOutput("bazel-targets", processedNonTestTargets.join(" "));
