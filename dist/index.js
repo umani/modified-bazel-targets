@@ -133,6 +133,12 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         const start = new Date();
         const changedFiles = core.getInput("changed-files");
+        if (changedFiles.trim() === "") {
+            core.debug("no changed filed");
+            core.setOutput("bazel-targets", "");
+            core.setOutput("bazel-test-targets", "");
+            return;
+        }
         const bazel = core.getInput("bazel-exec", { required: false }) || "bazel";
         const bazelBuilds = yield findAllBazelPackages(changedFiles.split(" "));
         core.debug(`${new Date().getTime() - start.getTime()} found bazel packages`);
