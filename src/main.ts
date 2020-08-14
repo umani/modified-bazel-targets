@@ -42,6 +42,12 @@ async function bazelTargets(bazel: string, input: string[], query: (t: string) =
 
 export async function run(): Promise<void> {
     const changedFiles: string = core.getInput("changed-files")
+    if (changedFiles.trim() === "") {
+        core.debug("no changed filed")
+        core.setOutput("bazel-targets", "")
+        core.setOutput("bazel-test-targets", "")
+        return
+    }
     const bazel: string = core.getInput("bazel-exec", { required: false }) || "bazel"
     const bazelBuilds = await findAllBazelPackages(changedFiles.split(" "))
     const processedTargets = await bazelTargets(bazel, bazelBuilds, t => `rdeps(//..., ${t})`)
