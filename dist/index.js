@@ -153,15 +153,14 @@ function run() {
         const changedFiles = core.getInput("changed-files");
         if (changedFiles.trim() === "") {
             core.debug("no changed filed");
-            core.setOutput("bazel-targets", "");
-            core.setOutput("bazel-test-targets", "");
+            core.setOutput("bazel_targets", "");
             return;
         }
         const bazel = core.getInput("bazel-exec", { required: false }) || "bazel";
         const bazelBuilds = yield findAllBazelPackages(changedFiles.split(" "));
         const processedTargets = yield bazelTargets(bazel, bazelBuilds, t => `rdeps(//..., ${t})`);
         core.debug(`bazel targets: ${processedTargets}`);
-        core.setOutput("bazel-targets", processedTargets.join(" "));
+        core.setOutput("bazel_targets", processedTargets.join(" "));
     });
 }
 exports.run = run;
