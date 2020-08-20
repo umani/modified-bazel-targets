@@ -51,13 +51,8 @@ export async function run(): Promise<void> {
     const bazel: string = core.getInput("bazel-exec", { required: false }) || "bazel"
     const bazelBuilds = await findAllBazelPackages(changedFiles.split(" "))
     const processedTargets = await bazelTargets(bazel, bazelBuilds, t => `rdeps(//..., ${t})`)
-    core.debug(`all targets: ${processedTargets}`)
-    const processedTestTargets = await bazelTargets(bazel, processedTargets, t => `kind(".*_test rule", ${t})`)
-    const processedNonTestTargets = processedTargets.filter(t => !processedTestTargets.includes(t))
-    core.debug(`bazel targets: ${processedNonTestTargets}`)
-    core.setOutput("bazel-targets", processedNonTestTargets.join(" "))
-    core.debug(`bazel test targets: ${processedTestTargets}`)
-    core.setOutput("bazel-test-targets", processedTestTargets.join(" "))
+    core.debug(`bazel targets: ${processedTargets}`)
+    core.setOutput("bazel-targets", processedTargets.join(" "))
 }
 
 if (require.main === module) {
