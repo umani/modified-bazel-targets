@@ -5,6 +5,7 @@ This GitHub action applies to pull requests and populates an output variable wit
 It needs to be executed after the actions/checkout action, as it needs to operate on the repository.
 
 ### Workflow Config Example
+
 ```
 - name: Changed Files Exporter
   uses: futuratrepadeira/modified-bazel-targets@v1
@@ -13,12 +14,13 @@ It needs to be executed after the actions/checkout action, as it needs to operat
 ```
 
 ### Inputs
-* **`changed-files`**: The set of changed files as a whitespace separated list.
-* **`bazel-exec`**: How to invoke the Bazel command; defaults to `bazel`.
+
+-   **`changed-files`**: The set of changed files as a whitespace separated list.
+-   **`bazel-exec`**: How to invoke the Bazel command; defaults to `bazel`.
 
 ### Outputs
-* **`bazel-targets`**: A JSON encoded array of the affected Bazel targets.
-* **`bazel-test-targets`**: A JSON encoded array of the affected Bazel test targets.
+
+-   **`bazel-targets`**: A JSON encoded array of the affected Bazel targets.
 
 ## Release new version
 
@@ -30,4 +32,3 @@ git add dist
 git commit -a -m "release: {version}"
 git push origin releases/{version}
 ```
-
