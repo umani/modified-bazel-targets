@@ -29,7 +29,7 @@ async function modifiedBuildFiles(bazel: string, input: string[]): Promise<strin
 }
 
 export async function run(): Promise<void> {
-    const changedFiles: string[] = JSON.parse(core.getInput("changed_files"))
+    const changedFiles: string[] = core.getInput("changed_files").split(" ")
     if (changedFiles.length === 0) {
         core.debug("no changed filed")
         core.setOutput("bazel_targets", "")
@@ -50,7 +50,7 @@ export async function run(): Promise<void> {
     labels.push(...(await modifiedBuildFiles(bazel, buildFiles)))
     const processedTargets = await rules(bazel, labels)
     core.debug(`bazel targets: ${processedTargets}`)
-    core.setOutput("bazel_targets", JSON.stringify(processedTargets))
+    core.setOutput("bazel_targets", processedTargets.join(" "))
 }
 
 if (require.main === module) {

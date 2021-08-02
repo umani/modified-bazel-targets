@@ -23,7 +23,7 @@ It needs to be executed after the actions/checkout action, as it needs to operat
 
 ### Outputs
 
--   **`bazel_targets`**: A JSON encoded array of the affected Bazel targets.
+-   **`bazel_targets`**: A whitespace separated list of the affected Bazel targets.
 
 ## Release new version
 
