@@ -8,19 +8,19 @@ It needs to be executed after the actions/checkout action, as it needs to operat
 
 ```
 - name: Changed Files Exporter
-  uses: futuratrepadeira/modified-bazel-targets@v1
+  uses: umani/modified-bazel-targets@v2
   with:
-    changed-files: "file1.go path/to/file2.go"
+    changed_files: "file1.go path/to/file2.go"
 ```
 
 ### Inputs
 
--   **`changed-files`**: The set of changed files as a whitespace separated list.
--   **`bazel-exec`**: How to invoke the Bazel command; defaults to `bazel`.
+-   **`changed_files`**: The set of changed files as a whitespace separated list.
+-   **`bazel_exec`**: How to invoke the Bazel command; defaults to `bazel`.
 
 ### Outputs
 
--   **`bazel-targets`**: A JSON encoded array of the affected Bazel targets.
+-   **`bazel_targets`**: A JSON encoded array of the affected Bazel targets.
 
 ## Release new version
 

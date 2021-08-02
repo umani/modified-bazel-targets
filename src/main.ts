@@ -1,57 +1,56 @@
 import { exec } from "child_process"
-import fs from "fs"
-import { dirname, join } from "path"
 import { promisify } from "util"
 
 import * as core from "@actions/core"
 
-async function fileExists(path: string): Promise<boolean> {
-    try {
-        await fs.promises.access(path, fs.constants.F_OK)
-        return true
-    } catch {
-        return false
-    }
-}
-
-export async function findBazelPackage(path: string): Promise<string> {
-    if (await fileExists(join(path, "WORKSPACE"))) {
-        return "//..."
-    }
-    if (await fileExists(join(path, "BUILD.bazel"))) {
-        return `//${path}:all`
-    }
-    const parent = dirname(path)
-    if (parent === path) {
-        throw new Error("This action should be run only for files inside a Bazel workspace")
-    }
-    return await findBazelPackage(parent)
-}
-
-export async function findAllBazelPackages(changedFiles: string[]): Promise<string[]> {
-    const targets = await Promise.all(Array.from(new Set(changedFiles.map(dirname))).map(f => findBazelPackage(f)))
-    return Array.from(new Set(targets))
-}
-
-async function bazelTargets(bazel: string, input: string[], query: (t: string) => string): Promise<string[]> {
-    const targets = await promisify(exec)(`${bazel} query '${query(`set(${input.join(" ")})`)}'`)
+async function executeBazelQuery(bazel: string, query: string): Promise<string[]> {
+    const q = `${bazel} query --keep_going --universe_scope=//... --order_output=no "${query}" 2> /dev/null || true`
+    const targets = (await promisify(exec)(q)).stdout
     const set = new Set<string>()
-    targets.stdout.split(/(?:\r\n|\r|\n)/g).forEach(l => l.trim() && set.add(l))
+    for (const t of targets.split(/(?:\r\n|\r|\n)/g)) {
+        const trimmed = t.trim()
+        if (trimmed) {
+            set.add(trimmed)
+        }
+    }
     return Array.from(set)
 }
 
+function rules(bazel: string, input: string[]): Promise<string[]> {
+    return executeBazelQuery(bazel, `kind(rule, allrdeps(set(${input.join(" ")})))`)
+}
+
+async function modifiedBuildFiles(bazel: string, input: string[]): Promise<string[]> {
+    const targets = await executeBazelQuery(bazel, `rbuildfiles(${input.join(", ")})`)
+    return targets.map(t => {
+        const pkg = t.slice(0, t.indexOf(":"))
+        return `${pkg}:all`
+    })
+}
+
 export async function run(): Promise<void> {
-    const changedFiles: string = core.getInput("changed-files")
-    if (changedFiles.trim() === "") {
+    const changedFiles: string[] = JSON.parse(core.getInput("changed_files"))
+    if (changedFiles.length === 0) {
         core.debug("no changed filed")
         core.setOutput("bazel_targets", "")
         return
     }
-    const bazel: string = core.getInput("bazel-exec", { required: false }) || "bazel"
-    const bazelBuilds = await findAllBazelPackages(changedFiles.split(" "))
-    const processedTargets = await bazelTargets(bazel, bazelBuilds, t => `rdeps(//..., ${t})`)
+    const buildFiles: string[] = []
+    const labels: string[] = []
+    for (const f of changedFiles) {
+        if (f.endsWith("BUILD") || f.endsWith("BUILD.bazel") || f.endsWith(".bzl")) {
+            buildFiles.push(f)
+        } else if (f === "WORKSPACE") {
+            labels.push("//...")
+        } else {
+            labels.push(f)
+        }
+    }
+    const bazel = core.getInput("bazel_exec", { required: false }) || "bazel"
+    labels.push(...await modifiedBuildFiles(bazel, buildFiles))
+    const processedTargets = await rules(bazel, labels)
     core.debug(`bazel targets: ${processedTargets}`)
-    core.setOutput("bazel_targets", processedTargets.join(" "))
+    core.setOutput("bazel_targets", JSON.stringify(processedTargets))
 }
 
 if (require.main === module) {
