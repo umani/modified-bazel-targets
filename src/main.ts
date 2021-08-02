@@ -47,7 +47,7 @@ export async function run(): Promise<void> {
         }
     }
     const bazel = core.getInput("bazel_exec", { required: false }) || "bazel"
-    labels.push(...await modifiedBuildFiles(bazel, buildFiles))
+    labels.push(...(await modifiedBuildFiles(bazel, buildFiles)))
     const processedTargets = await rules(bazel, labels)
     core.debug(`bazel targets: ${processedTargets}`)
     core.setOutput("bazel_targets", JSON.stringify(processedTargets))
