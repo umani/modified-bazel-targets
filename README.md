@@ -1,5 +1,8 @@
 # Modified Bazel Targets Action
 
+[![Build](https://github.com/umani/modified-bazel-targets/workflows/build-test/badge.svg)](https://github.com/umani/modified-bazel-targets/actions?query=workflow%3A%22build-test%22)
+
+
 This GitHub action applies to pull requests and populates an output variable with the set of Bazel targets that have changed (including dependencies), based on the set of files that have been changed.
 
 It needs to be executed after the actions/checkout action, as it needs to operate on the repository.
