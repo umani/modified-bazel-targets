@@ -203,6 +203,25 @@ function modifiedBuildFiles(bazel, input) {
         });
     });
 }
+function calculateTargets(bazel, changedFiles) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const buildFiles = [];
+        const labels = [];
+        for (const f of changedFiles) {
+            if (f === "WORKSPACE") {
+                return ["//..."];
+            }
+            if (f.endsWith("BUILD") || f.endsWith("BUILD.bazel") || f.endsWith(".bzl")) {
+                buildFiles.push(f);
+            }
+            else {
+                labels.push(f);
+            }
+        }
+        labels.push(...(yield modifiedBuildFiles(bazel, buildFiles)));
+        return yield rules(bazel, labels);
+    });
+}
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         const changedFiles = core.getInput("changed_files").split(" ");
@@ -211,24 +230,10 @@ function run() {
             core.setOutput("bazel_targets", "");
             return;
         }
-        const buildFiles = [];
-        const labels = [];
-        for (const f of changedFiles) {
-            if (f.endsWith("BUILD") || f.endsWith("BUILD.bazel") || f.endsWith(".bzl")) {
-                buildFiles.push(f);
-            }
-            else if (f === "WORKSPACE") {
-                labels.push("//...");
-            }
-            else {
-                labels.push(f);
-            }
-        }
         const bazel = core.getInput("bazel_exec", { required: false }) || "bazel";
-        labels.push(...(yield modifiedBuildFiles(bazel, buildFiles)));
-        const processedTargets = yield rules(bazel, labels);
-        core.debug(`bazel targets: ${processedTargets}`);
-        core.setOutput("bazel_targets", processedTargets.join(" "));
+        const targets = yield calculateTargets(bazel, changedFiles);
+        core.debug(`bazel targets: ${targets}`);
+        core.setOutput("bazel_targets", targets.join(" "));
     });
 }
 exports.run = run;
