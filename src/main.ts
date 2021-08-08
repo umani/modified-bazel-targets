@@ -28,6 +28,23 @@ async function modifiedBuildFiles(bazel: string, input: string[]): Promise<strin
     })
 }
 
+async function calculateTargets(bazel: string, changedFiles: string[]): Promise<string[]> {
+    const buildFiles: string[] = []
+    const labels: string[] = []
+    for (const f of changedFiles) {
+        if (f === "WORKSPACE") {
+            return ["//..."]
+        }
+        if (f.endsWith("BUILD") || f.endsWith("BUILD.bazel") || f.endsWith(".bzl")) {
+            buildFiles.push(f)
+        } else {
+            labels.push(f)
+        }
+    }
+    labels.push(...(await modifiedBuildFiles(bazel, buildFiles)))
+    return await rules(bazel, labels)
+}
+
 export async function run(): Promise<void> {
     const changedFiles: string[] = core.getInput("changed_files").split(" ")
     if (changedFiles.length === 0) {
@@ -35,22 +52,10 @@ export async function run(): Promise<void> {
         core.setOutput("bazel_targets", "")
         return
     }
-    const buildFiles: string[] = []
-    const labels: string[] = []
-    for (const f of changedFiles) {
-        if (f.endsWith("BUILD") || f.endsWith("BUILD.bazel") || f.endsWith(".bzl")) {
-            buildFiles.push(f)
-        } else if (f === "WORKSPACE") {
-            labels.push("//...")
-        } else {
-            labels.push(f)
-        }
-    }
     const bazel = core.getInput("bazel_exec", { required: false }) || "bazel"
-    labels.push(...(await modifiedBuildFiles(bazel, buildFiles)))
-    const processedTargets = await rules(bazel, labels)
-    core.debug(`bazel targets: ${processedTargets}`)
-    core.setOutput("bazel_targets", processedTargets.join(" "))
+    const targets = await calculateTargets(bazel, changedFiles)
+    core.debug(`bazel targets: ${targets}`)
+    core.setOutput("bazel_targets", targets.join(" "))
 }
 
 if (require.main === module) {
