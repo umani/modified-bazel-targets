@@ -35,7 +35,8 @@ async function calculateTargets(bazel: string, changedFiles: string[]): Promise<
         if (f === "WORKSPACE") {
             return ["//..."]
         }
-        if (f.endsWith("BUILD") || f.endsWith("BUILD.bazel") || f.endsWith(".bzl")) {
+        const exts = ["BUILD", ".bazel", ".bzl"]
+        if (exts.some(e => f.endsWith(e))) {
             buildFiles.push(f)
         } else {
             labels.push(f)
